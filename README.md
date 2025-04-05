@@ -18,11 +18,11 @@ Understand key TLS concepts like certificates, private keys, and encryption.
 ### Steps for the Project
 
 1. Generate a Self-Signed TLS Certificate
-Use openssl to generate a self-signed certificate.
+   Use openssl to generate a self-signed certificate.
 
 ```bash
 # Generate a private key
-openssl genrsa -out server.key 2048
+openssl genpkey -algorithm RSA -out server.key -pkeyopt rsa_keygen_bits:2048
 
 # Generate a self-signed certificate
 openssl req -new -x509 -key server.key -out server.crt -days 365
@@ -33,8 +33,48 @@ This will create two files:
 - server.key: The private key.
 - server.crt: The self-signed certificate.
 
+#### decipher what is in your .cert file
+
+Use a tool like open source
+[CyberChef - Parse X.509
+certificate](<https://gchq.github.io/CyberChef/#recipe=Parse_X.509_certificate('PEM')>)
+to decrypt and peek into your .cert file. You will be interested to get
+information about its expiration date and its issuer
+
+```
+Version:          3 (0x02)
+Serial number:    154907564701571598044156563798732736333028411657 (0x1b224ba2040dfe24d525df718696ca91ebc64909)
+Algorithm ID:     SHA256withRSA
+Validity
+  Not Before:     05/04/2025 19:59:04 (dd-mm-yyyy hh:mm:ss) (250405195904Z)
+  Not After:      05/04/2026 19:59:04 (dd-mm-yyyy hh:mm:ss) (260405195904Z)
+Issuer
+  C  = CA
+  ST = quebec
+  L  = my city
+  O  = socraticdev
+  OU = research and development
+  CN = socratic.dev
+  E  = socraticdev@gmail.com
+Subject
+  C  = CA
+  ST = quebec
+  L  = my city
+  O  = socraticdev
+  OU = research and development
+  CN = socratic.dev
+  E  = socraticdev@gmail.com
+Public Key
+  Algorithm:      RSA
+  Length:         2048 bits
+  ()...)
+Certificate Signature
+  Algorithm:      SHA256withRSA
+  (...)
+```
+
 2. Create an HTTPS Server
-Use Python's http.server and ssl modules to set up an HTTPS server.
+   Use Python's http.server and ssl modules to set up an HTTPS server.
 
 ```python
 import ssl
@@ -56,7 +96,7 @@ httpd.serve_forever()
 ```
 
 3. Create an HTTPS Client
-Use Python's requests library to create a client that connects to the HTTPS server.
+   Use Python's requests library to create a client that connects to the HTTPS server.
 
 ```python
 import requests
@@ -73,18 +113,25 @@ print("Server response:", response.text)
 4. Run the Project
 
 Start the HTTPS server:
+
 ```
 python server.py
 ```
 
 Run the HTTPS client in another terminal:
+
 ```
+python -m venv env && source env/bin/activate
+
+pip install -r requirements.txt
+
 python client.py
 ```
 
 You should see the server's response printed in the client's terminal.
 
 ### Concepts You'll Learn
+
 TLS Certificates:
 
 Understand the role of certificates and private keys.
@@ -100,6 +147,7 @@ Data Integrity:
 How TLS ensures that data is not tampered with during transmission.
 
 ### Next Steps
+
 Add Mutual Authentication:
 
 Configure the server to require a client certificate and modify the client to provide one.
@@ -115,3 +163,16 @@ Use TLS in a real-world application, such as a RESTful API or a web application.
 
 _This sandbox project is an excellent starting point to understand the basics of TLS and how it secures communication over the internet._
 
+## scripted answer
+
+`run.sh` script will generate a private key, a certificate for `localhost`,
+start an http server and an http client
+
+this http client will download html content from the server, download it, and
+open your default web browser to show you
+
+## FAQ
+
+### how can i make SSL connection fail?
+
+set your Certificate expiry to `-1`days
